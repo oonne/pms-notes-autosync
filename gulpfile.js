@@ -2,14 +2,6 @@ const fs = require('fs');
 const https = require('https');
 let gulp = require('gulp');
 let config = require('./config/index');
-let rename = require('gulp-rename');
-
-// init
-gulp.task('init', function () {
-    gulp.src(['./config/config.js'])
-        .pipe(rename('config-local.js'))
-        .pipe(gulp.dest('./config'))
-});
 
 // sync
 let sync = (note, event) => {
@@ -36,7 +28,8 @@ let sync = (note, event) => {
   let req = https.request(options, (res) => {
     res.on('data', (chunk) => {
       if (JSON.parse(chunk).Ret == 0) {
-        console.log(`${sNoteTitle} 同步成功`);
+        let timeStep = new Date();
+        console.log(`${sNoteTitle} 同步成功 ${timeStep}`);
       };
     });
   });
