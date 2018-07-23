@@ -3,8 +3,42 @@ const https = require('https');
 let gulp = require('gulp');
 let config = require('./config/index');
 
-// sync
-let sync = (note, event) => {
+// download
+gulp.task('download', function () {
+  let options = {
+    hostname: config.apiUrl,
+    port: 443,
+    path: '/note/index',
+    method: 'GET',
+    headers: {
+      'X-Auth-Token': config.token,
+      'Content-Type': 'application/json; charset=UTF-8',
+    },
+  };
+  let resBuff = Buffer.alloc(0);
+  let req = https.request(options, (res) => {
+    res.on('data', (buff) => {
+      resBuff = Buffer.concat([resBuff, buff]);
+
+    });
+    res.on('end', () => {
+      let notes = JSON.parse(resBuff.toString()).Data;
+      config.list.map((item)=>{
+        let note = notes.find((content)=>content.uNoteID == item.id);
+        if (note) {
+          fs.writeFileSync(`./notes/${item.name}.txt`, note.tNoteContent); 
+        }
+      })
+    });
+  });
+  req.on('error', (e) => {
+    console.error(e);
+  });
+  req.end();
+});
+
+// update
+let update = (note, event) => {
   let uNoteID = note.id;
   let sNoteTitle = note.name;
   let tNoteContent = fs.readFileSync(event.path).toString();
@@ -17,7 +51,7 @@ let sync = (note, event) => {
   let options = {
     hostname: config.apiUrl,
     port: 443,
-    path: config.path,
+    path: '/note/update',
     method: 'POST',
     headers: {
       'X-Auth-Token': config.token,
@@ -40,9 +74,9 @@ let sync = (note, event) => {
   req.end();
 }
 
-gulp.task('watch', function () {
+gulp.task('watch', ['download'], function () {
     let list = config.list;
     list.map((note)=>{
-      gulp.watch(`./notes/${note.name}.txt`, sync.bind(this, note));
+      gulp.watch(`./notes/${note.name}.txt`, update.bind(this, note));
     })
 });
