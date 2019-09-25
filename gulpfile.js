@@ -68,6 +68,7 @@ let update = (note, event) => {
     });
   });
   req.on('error', (e) => {
+    let timeStep = new Date();
     console.error(`${sNoteTitle} 同步失败 ${timeStep}`);
     console.error(e);
   });
